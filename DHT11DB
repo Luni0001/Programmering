@@ -1,0 +1,31 @@
+import sqlite3
+import gpiozero
+import Adafruit_DHT
+import datetime
+from time import sleep
+
+sensor = Adafruit_DHT.DHT11
+pin = 17
+
+conn = sqlite3.connect('DH11.DB')
+cur = conn.cursor()
+cur.execute('CREATE TABLE IF NOT EXISTS Målinger(Temperature, Humidity, Datetime)')
+conn.commit()
+
+sql = "INSERT INTO Målinger (Temperature, Humidity, Datetime) VALUES(?,?,?)"
+humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+
+while True:
+    try:
+        if humidity is not None and temperature is not None:
+            conn = sqlite3.connect('DH11.DB')
+            Data = (temperature, humidity, datetime.datetime.now())
+            cur = conn.cursor()
+            cur.execute(sql, Data)
+            conn.commit()
+            sleep(10)
+    finally: 
+        conn.close()
+
+#for at finde de sidste 20 målinger af SQL databasen skal man først åbne sin database med kommandoen "SQLite3 (navnet på ens database)"
+#derefter skriver man kommandoen "SELECT * FROM Målinger DSC LIMIT 20"
